@@ -1,0 +1,22 @@
+{
+    "name": "tahaazare/secure-download",
+    "description": "Generate secure download links with expiration in Laravel",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Tahaazare\\SecureDownload\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^11.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tahaazare\\SecureDownload\\SecureDownloadServiceProvider"
+            ]
+        }
+    }
+}
