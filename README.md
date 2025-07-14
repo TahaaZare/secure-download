@@ -42,14 +42,14 @@ config/secure-download.php
 ```
 
 
-## 3. Set the Security Key in `.env`
+## 3. Migration
 ```bash
-SECURE_DOWNLOAD_SECRET=your-secure-key
+php artisan migrate
 ```
 
 ----
 
-## 🛠 ساخت لینک دانلود امن | Generate Secure Download Link
+## 🛠 Generate Secure Download Link | ساخت لینک دانلود امن (Quick Usage)
 
 ```bash
 $link = SecureDownload::generate(
