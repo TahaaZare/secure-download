@@ -21,6 +21,6 @@ class SecureDownloadServiceProvider extends \Illuminate\Support\ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/config/secure-download.php', 'secure-download');
+        $this->mergeConfigFrom(__DIR__ . '/../config/secure-download.php', 'secure-download');
     }
 }
