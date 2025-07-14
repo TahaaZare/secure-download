@@ -31,7 +31,7 @@ class DownloadController extends Controller
 
         $maxDownloads = $linkRecord->max_downloads;
 
-        if ($maxDownloads !== null && $linkRecord->download_count >= $maxDownloads) {
+        if ($maxDownloads && $linkRecord->download_count > $maxDownloads) {
             abort(403, 'Download limit reached');
         }
 
