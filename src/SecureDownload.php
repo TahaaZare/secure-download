@@ -2,10 +2,10 @@
 
 namespace Tahaazare\SecureDownload;
 
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
-use Tahaazare\SecureDownload\Enums\TimeUnitEnum;
+use Illuminate\Support\Facades\URL;
 use Tahaazare\SecureDownload\Enums\FileTypeEnum;
+use Tahaazare\SecureDownload\Enums\TimeUnitEnum;
 use Tahaazare\SecureDownload\Models\SecureDownloadLink;
 
 class SecureDownload
@@ -36,18 +36,18 @@ class SecureDownload
             default               => $now->addSeconds($time)->timestamp,
         };
 
-        $payloadHash = hash_hmac('sha256', $filePath . $expires . $type->value, config('secure-download.secret'));
+        $payloadHash = self::buildHash($filePath, $expires, $type->value);
 
         SecureDownloadLink::updateOrCreate(
             ['payload_hash' => $payloadHash],
             [
-                'file_path'       => $filePath,
-                'type'            => $type->value,
-                'expires_at'      => now()->setTimestamp($expires),
-                'user_id'         => Auth::id(),
-                'download_count'  => 0,
-                'last_download_at'=> null,
-                'max_downloads'   => $maxDownloads,
+                'file_path'        => $filePath,
+                'type'             => $type->value,
+                'expires_at'       => now()->setTimestamp($expires),
+                'user_id'          => Auth::id() ?? null,
+                'download_count'   => 0,
+                'last_download_at' => null,
+                'max_downloads'    => $maxDownloads,
             ]
         );
 
@@ -59,7 +59,20 @@ class SecureDownload
         ];
 
         return URL::temporarySignedRoute('secure-download.file', $expires, [
-            'payload' => base64_encode(json_encode($payload))
+            'payload' => base64_encode(json_encode($payload)),
         ]);
+    }
+
+    /**
+     * Generate hash for payload.
+     *
+     * @param string $file
+     * @param int $expires
+     * @param string $type
+     * @return string
+     */
+    public static function buildHash(string $file, int $expires, string $type): string
+    {
+        return hash_hmac('sha256', $file . $expires . $type, config('secure-download.secret'));
     }
 }

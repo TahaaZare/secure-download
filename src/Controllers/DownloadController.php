@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Response;
 use Tahaazare\SecureDownload\Models\SecureDownloadLink;
+use Tahaazare\SecureDownload\SecureDownload;
 
 class DownloadController extends Controller
 {
@@ -17,32 +18,34 @@ class DownloadController extends Controller
             abort(400, 'Invalid payload');
         }
 
-        $expectedHash = hash_hmac('sha256', $payload['file'] . $payload['expires'] . $payload['type'], config('secure-download.secret'));
+        $filePath = $payload['file'];
+        $expires = $payload['expires'];
+        $type = $payload['type'];
+        $providedHash = $payload['hash'];
 
-        if ($payload['hash'] !== $expectedHash || now()->timestamp > $payload['expires']) {
+        $expectedHash = SecureDownload::buildHash($filePath, $expires, $type);
+
+        if ($providedHash !== $expectedHash || now()->timestamp > $expires) {
             abort(403, 'Invalid or expired link');
         }
 
-        $linkRecord = SecureDownloadLink::where('payload_hash', $payload['hash'])->first();
+        $linkRecord = SecureDownloadLink::where('payload_hash', $providedHash)->first();
 
         if (!$linkRecord) {
             abort(403, 'Link not found or invalid');
         }
 
-        $maxDownloads = $linkRecord->max_downloads;
-
-        if ($maxDownloads && $linkRecord->download_count > $linkRecord->max_downloads) {
+        if (
+            $linkRecord->max_downloads !== null &&
+            $linkRecord->download_count >= $linkRecord->max_downloads
+        ) {
             abort(403, 'Download limit reached');
         }
 
         $linkRecord->increment('download_count');
-        $linkRecord->last_download_at = now();
-        $linkRecord->save();
+        $linkRecord->update(['last_download_at' => now()]);
 
-        $type = $payload['type'];
-        $filePath = $payload['file'];
-
-        switch ($type) {
+        switch (strtolower($type)) {
             case 'storage':
                 $fullPath = storage_path('app/' . $filePath);
                 break;
